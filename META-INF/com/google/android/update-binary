@@ -1,0 +1,42 @@
+#!/system/bin/sh
+# Magisk Module Installer Wrapper
+# This script is executed by custom recovery or the Magisk app.
+# In Magisk app, it is replaced by the official script anyway.
+# In custom recovery, it runs this logic to set up the module.
+
+OUTFD=$2
+ZIPFILE=$3
+
+# Output to recovery terminal
+ui_print() {
+    echo -n -e "ui_print $1\n" >> /proc/self/fd/$OUTFD
+}
+
+ui_print "***********************************"
+ui_print "*      App & Service Monitor      *"
+ui_print "*            by Billy             *"
+ui_print "***********************************"
+
+# Magisk recovery installer standard behavior:
+# Let's let Magisk's official installation helper handle it if possible.
+if [ -f /data/adb/magisk/util_functions.sh ]; then
+    . /data/adb/magisk/util_functions.sh
+    # This will trigger the Magisk standard installation process automatically!
+    install_module
+else
+    # Simple direct extraction for custom recoveries (fallback)
+    MODID="app_service_monitor"
+    MODPATH="/data/adb/modules/$MODID"
+    ui_print "- Installing without Magisk environment..."
+    mkdir -p "$MODPATH"
+    unzip -o "$ZIPFILE" -d "$MODPATH"
+    # Remove installer files from the target
+    rm -rf "$MODPATH/META-INF"
+    # Set permissions
+    chmod -R 755 "$MODPATH"
+    chmod 755 "$MODPATH/service.sh"
+    chmod 755 "$MODPATH/common/service.sh"
+    ui_print "- Done installing to $MODPATH"
+fi
+
+exit 0
