@@ -1,0 +1,89 @@
+#!/system/bin/sh
+echo •Changing SELinux to Permissive•
+sleep 1
+setenforce 0
+echo •DONE. SELinux Status is Permissive•
+sleep 2
+#Toast
+am start -a android.intent.action.MAIN -e toasttext "Your Graphics has changed to Max+144hz" -n bellavita.toast/.MainActivity
+clear
+echo •Script by @modulegaming6969fps•
+sleep 2
+echo •Changing Graphics to Max•
+# Pilihan package otomatis (Garena, Proxima, atau Tencent)
+if [ -f "/data/user/0/com.garena.game.df/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini" ]; then
+    FILE="/data/user/0/com.garena.game.df/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini"
+elif [ -f "/data/user/0/com.proxima.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini" ]; then
+    FILE="/data/user/0/com.proxima.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini"
+elif [ -f "/data/user/0/com.tencent.tmgp.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini" ]; then
+    FILE="/data/user/0/com.tencent.tmgp.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini"
+else
+    echo "❌ Package tidak ditemukan! Pastikan game terinstal."
+    exit 1
+fi
+
+# Konfigurasi otomatis
+if [ -f "$FILE" ]; then
+    cp "$FILE" "$FILE.bak"  # Backup file
+
+    # Hapus pengaturan lama
+    sed -i '/DFMFPSLevel=/d' "$FILE"
+    sed -i '/DFMQualityLevel=/d' "$FILE"
+
+    # Terapkan pengaturan MAXIMUM (144 FPS + Grafik Ultimate)
+    {
+        echo "DFMFPSLevel=9"      # 144 FPS (level 9)
+        echo "DFMQualityLevel=5"  # Grafik Maximum (level 5)
+    } >> "$FILE"
+
+    # Set permission
+    chmod 777 "$FILE"
+
+    # Hapus backup
+    rm -f "$FILE.bak"
+
+    echo "✔ Konfigurasi berhasil! (144 FPS + Grafik MAXIMUM)"
+else
+    echo "❌ File konfigurasi tidak ditemukan: $FILE"
+fi
+
+# Pilihan package otomatis (Garena, Proxima, atau Tencent)
+if [ -f "/data/data/com.garena.game.df/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini" ]; then
+    FILE="/data/data/com.garena.game.df/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini"
+elif [ -f "/data/user/0/com.proxima.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini" ]; then
+    FILE="/data/data/com.proxima.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini"
+elif [ -f "/data/data/com.tencent.tmgp.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini" ]; then
+    FILE="/data/data/com.tencent.tmgp.dfm/files/UE4Game/DeltaForce/DeltaForce/Saved/Config/Android/Engine.ini"
+else
+    echo "❌ Package tidak ditemukan! Pastikan game terinstal."
+    exit 1
+fi
+
+# Konfigurasi otomatis
+if [ -f "$FILE" ]; then
+    cp "$FILE" "$FILE.bak"  # Backup file
+
+    # Hapus pengaturan lama
+    sed -i '/DFMFPSLevel=/d' "$FILE"
+    sed -i '/DFMQualityLevel=/d' "$FILE"
+
+    # Terapkan pengaturan MAXIMUM (144 FPS + Grafik Ultimate)
+    {
+        echo "DFMFPSLevel=9"      # 144 FPS (level 9)
+        echo "DFMQualityLevel=5"  # Grafik Maximum (level 5)
+    } >> "$FILE"
+
+    # Set permission
+    chmod 777 "$FILE"
+
+    # Hapus backup
+    rm -f "$FILE.bak"
+
+    echo "✔ Konfigurasi berhasil! (144 FPS + Grafik MAXIMUM)"
+else
+    echo "❌ File konfigurasi tidak ditemukan: $FILE"
+fi
+sleep 2
+setenforce 1
+echo •DONE. SELinux Status is Enforcing•
+echo •Changing Graphics to Max+144hz DONE•

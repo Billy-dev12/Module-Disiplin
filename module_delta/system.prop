@@ -1,0 +1,26 @@
+# This file will be read by resetprop
+# Example: Change dpi
+# ro.sf.lcd_density=320
+
+# Unlocker
+ro.product.system.model=V2408A
+ro.product.model=V2408A
+
+# Qualcomm
+Build.BRAND=QTI
+ro.soc.manufacturer=Qualcomm
+ro.vendor.soc.manufacturer=Qualcomm
+ro.hardware.soc.manufacturer=Qualcomm
+ro.hardware.chipname=sun
+ro.chipname=sun
+ro.soc.model=SM8750-AC
+ro.vendor.soc.model=SM8750-AC
+ro.vendor.se.chip.model=SM8750-AC
+ro.vendor.soc.model.external_name=sun
+ro.vendor.soc.model.part_name=sun
+ro.vendor.qti.soc_name=sun
+ro.vendor.qti.soc_model=SM8750-AC
+ro.vendor.qti.soc_id=618
+ro.vendor.mediatek.platform=SM8750
+ro.product.oplus.cpuinfo=SM8750-AC
+ro.vendor.soc.model_ready=1

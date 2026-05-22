@@ -1,0 +1,11 @@
+#!/system/bin/sh
+# Script untuk test notifikasi dari module Magisk Fokus Terminal
+
+echo "Mencoba mengirim notifikasi dengan bypass MIUI..."
+su -lp 2000 -c "cmd notification post -S bigtext -t '⚠️ TEST NOTIFIKASI' 'test_notif' 'Ini adalah pesan percobaan dari sistem debug notifikasi. Jika ini muncul, notifikasi berjalan normal.'"
+
+if [ $? -eq 0 ]; then
+    echo "Perintah notifikasi berhasil dieksekusi. Cek bar notifikasi Anda."
+else
+    echo "Gagal mengirim notifikasi. Pastikan service 'cmd notification' tersedia dan berfungsi."
+fi

@@ -68,17 +68,33 @@ while true; do
     if [ "$is_target" = true ]; then
         # Tambah waktu (interval sleep adalah 5 detik)
         used_time=$((used_time + 5))
-        echo "$used_time" > $TIME_FILE
+        if [ "$used_time" -gt "$LIMIT" ]; then
+            used_time=$LIMIT
+        fi
         
         # Cek jika melebihi limit
         if [ "$used_time" -ge "$LIMIT" ]; then
             # Kill aplikasi
             am force-stop "$top_pkg"
             
-            # Kirim notifikasi ke user
-            cmd notification post -S bigtext -t "⚠️ WAKTU SOSMED HABIS!" "socmed_block" "Ingat bro, kamu sudah buka sosmed selama 30 menit! Kembali fokus ke terminal!"
+            # Kirim notifikasi ke user (bypass MIUI block pakai UID 2000)
+            su -lp 2000 -c "cmd notification post -S bigtext -t '⚠️ WAKTU SOSMED HABIS!' 'socmed_block' 'Ingat bro, kamu sudah buka sosmed selama 30 menit! Kembali fokus ke terminal!'"
+            
+            # Arahkan kembali ke Termux
+            am start -n com.termux/com.termux.app.TermuxActivity
+        fi
+    else
+        # REGENERASI BILING (REWARD SYSTEM)
+        # Jika tidak membuka sosmed (ngoding di termux, layar mati, atau HP standby),
+        # kurangi waktu terpakai sebanyak 1 detik setiap loop 5 detik (Rasio 5:1).
+        if [ "$used_time" -gt 0 ]; then
+            used_time=$((used_time - 1))
+            if [ "$used_time" -lt 0 ]; then
+                used_time=0
+            fi
         fi
     fi
+    echo "$used_time" > $TIME_FILE
     
     # 4. Tulis hasil pemantauan ke file log /sdcard/monitor.txt
     used_min=$((used_time / 60))
