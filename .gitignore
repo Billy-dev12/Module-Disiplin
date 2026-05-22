@@ -1,1 +1,4 @@
 module_delta/
+*.zip
+*.txt
+.gitignore
