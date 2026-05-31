@@ -1,50 +1,243 @@
 #!/system/bin/sh
-# Tool untuk cek sisa waktu sosmed - By Billy & Antigravity
+# Tool untuk cek sisa waktu sosmed & Tantangan Kunci - By Billy & Antigravity
+# Versi 2.0 (Anti-Bypass Edition)
 
-TIME_FILE="/data/local/tmp/socmed_time.txt"
-LIMIT=1800 # 30 menit (dalam detik)
-
-if [ ! -f "$TIME_FILE" ]; then
-    used=0
-else
-    used=$(cat "$TIME_FILE")
-fi
-
-# Validasi angka
-if ! [ "$used" -eq "$used" ] 2>/dev/null; then
-    used=0
-fi
-
-remaining=$((LIMIT - used))
-if [ "$remaining" -lt 0 ]; then
-    remaining=0
-fi
-
-used_min=$((used / 60))
-used_sec=$((used % 60))
-rem_min=$((remaining / 60))
-rem_sec=$((remaining % 60))
+UNLOCKED_FILE="/data/local/tmp/socmed_unlocked"
 
 # Definisikan warna ANSI
 GREEN='\e[1;32m'
 RED='\e[1;31m'
 YELLOW='\e[1;33m'
+BLUE='\e[1;34m'
 CYAN='\e[1;36m'
 NC='\e[0m' # No Color
 
-echo -e "${CYAN}===========================================${NC}"
-echo -e "${YELLOW}        🎯 REMINDER FOKUS TERMINAL 🎯      ${NC}"
-echo -e "${CYAN}===========================================${NC}"
-echo -e "Device  : POCO X3 Pro (vayu)"
-echo -e "Limit   : 30 Menit / Hari (YouTube, IG, TikTok)"
-echo -e "${CYAN}-------------------------------------------${NC}"
-echo -e "Terpakai: ${YELLOW}${used_min} Menit ${used_sec} Detik${NC}"
+is_hard_block() {
+    local ch cm current_min
+    ch=$(date '+%H')
+    cm=$(date '+%M')
+    ch=$(echo "$ch" | sed 's/^0*//')
+    cm=$(echo "$cm" | sed 's/^0*//')
+    [ -z "$ch" ] && ch=0
+    [ -z "$cm" ] && cm=0
+    
+    current_min=$(( ch * 60 + cm ))
+    
+    # 1. Hard block pagi: 04:00 - 07:00 (240 menit s.d. 420 menit)
+    if [ "$current_min" -ge 240 ] && [ "$current_min" -lt 420 ]; then
+        return 0
+    fi
+    
+    # 2. Hard block malam / jam tidur: 22:30 - 04:00
+    if [ "$current_min" -ge 1350 ] || [ "$current_min" -lt 240 ]; then
+        return 0
+    fi
+    
+    return 1
+}
 
-if [ "$remaining" -gt 0 ]; then
-    echo -e "Sisa    : ${GREEN}${rem_min} Menit ${rem_sec} Detik${NC} sebelum di-kill!"
-    echo -e "Status  : ${GREEN}🟢 AKTIF (Silakan fokus!)${NC}"
-else
-    echo -e "Sisa    : ${RED}0 Detik (WAKTU HABIS!)${NC}"
-    echo -e "Status  : ${RED}🔴 DIBLOKIR (Kembali ke terminal bro!)${NC}"
-fi
-echo -e "${CYAN}===========================================${NC}"
+tampilkan_status() {
+    clear
+    echo -e "${CYAN}===========================================${NC}"
+    echo -e "${YELLOW}        🎯 REMINDER FOKUS TERMINAL 🎯      ${NC}"
+    echo -e "${CYAN}===========================================${NC}"
+    echo -e "Device  : POCO X3 Pro (vayu)"
+    echo -e "Limit   : Pembatas Sosmed (YouTube, IG, TikTok)"
+    echo -e "Metode  : Freeze/Unfreeze (Anti-Bypass)"
+    echo -e "${CYAN}-------------------------------------------${NC}"
+
+    if is_hard_block; then
+        echo -e "Status  : ${RED}🔴 DIBLOKIR TOTAL (Hard-Lockdown Jam Rawan)${NC}"
+        echo -e "Info    : Belajar atau tidur bro! Jangan buka sosmed."
+    else
+        now=$(date '+%s')
+        is_unlocked=false
+        if [ -f "$UNLOCKED_FILE" ]; then
+            expiry=$(cat "$UNLOCKED_FILE")
+            if echo "$expiry" | grep -qE '^[0-9]+$'; then
+                if [ "$now" -lt "$expiry" ]; then
+                    is_unlocked=true
+                    sisa=$(( expiry - now ))
+                fi
+            fi
+        fi
+
+        if [ "$is_unlocked" = true ]; then
+            sisa_min=$(( sisa / 60 ))
+            sisa_sec=$(( sisa % 60 ))
+            echo -e "Status  : ${GREEN}🟢 AKTIF SEMENTARA${NC}"
+            echo -e "Sisa    : ${YELLOW}${sisa_min} Menit ${sisa_sec} Detik${NC} sebelum dibekukan lagi!"
+        else
+            echo -e "Status  : ${RED}🔴 DIBLOKIR${NC}"
+            echo -e "Sisa    : ${RED}0 Detik (Waktu Habis!)${NC}"
+            echo -e "Info    : Jalankan tantangan untuk membuka selama 15 menit."
+        fi
+    fi
+    echo -e "${CYAN}===========================================${NC}"
+}
+
+jalankan_tantangan() {
+    if is_hard_block; then
+        echo -e "${RED}⚠️ Maaf, Anda berada di jam tidur atau jam rawan belajar (04:00-07:00 / 22:30-04:00).${NC}"
+        echo -e "${RED}Tantangan ditutup. Waktunya istirahat / fokus total tanpa tawar-menawar!${NC}"
+        return
+    fi
+
+    # Cek status jika sudah unlocked, tanyakan konfirmasi
+    now=$(date '+%s')
+    if [ -f "$UNLOCKED_FILE" ]; then
+        expiry=$(cat "$UNLOCKED_FILE")
+        if [ "$now" -lt "$expiry" ]; then
+            echo -e "${YELLOW}Sosmed saat ini masih terbuka. Sisa waktu Anda masih ada.${NC}"
+            echo -e "Apakah Anda ingin reset waktu ke 15 menit lagi dengan tantangan baru? (y/n)"
+            read -r konfirm
+            if [ "$konfirm" != "y" ] && [ "$konfirm" != "Y" ]; then
+                echo "Batal menjalankan tantangan."
+                return
+            fi
+        fi
+    fi
+
+    echo -e "\n${BLUE}[ Memulai Tantangan Fokus Terminal ]${NC}"
+    echo -e "Selesaikan tantangan berikut untuk mendapatkan akses 15 menit!"
+    
+    # Pilih acak tipe kuis: 1 = Matematika, 2 = Perintah Linux
+    tipe_kuis=$(( $(date '+%N' 2>/dev/null | cut -c9) % 2 + 1 ))
+    # Fallback jika %N tidak didukung
+    if [ -z "$tipe_kuis" ] || ! echo "$tipe_kuis" | grep -qE '^[1-2]$'; then
+        tipe_kuis=$(( $(date '+%S') % 2 + 1 ))
+    fi
+
+    passed=false
+
+    if [ "$tipe_kuis" -eq 1 ]; then
+        # Kuis Matematika Acak
+        # Gunakan nomor detik / menit agar acak
+        local num1=$(( $(date '+%S') * 2 / 3 + 13 ))
+        local num2=$(( $(date '+%M') / 2 + 7 ))
+        local operator="+"
+        local hasil_benar=$(( num1 + num2 ))
+        
+        # Kadang pakai perkalian ringan
+        if [ $(( num1 % 2 )) -eq 0 ]; then
+            num1=$(( num1 % 10 + 3 ))
+            num2=$(( num2 % 9 + 4 ))
+            operator="*"
+            hasil_benar=$(( num1 * num2 ))
+        fi
+
+        echo -e "\n${YELLOW}Tantangan Matematika:${NC}"
+        echo -e "Berapakah hasil dari: ${CYAN}$num1 $operator $num2${NC} ?"
+        echo -n "Jawaban Anda: "
+        read -r jawaban_user
+
+        if [ "$jawaban_user" = "$hasil_benar" ]; then
+            passed=true
+        fi
+    else
+        # Kuis Perintah/Konsep Linux
+        local random_q=$(( $(date '+%S') % 5 ))
+        
+        echo -e "\n${YELLOW}Tantangan Pengetahuan Linux / Terminal:${NC}"
+        
+        case $random_q in
+            0)
+                echo -e "Apa perintah Linux untuk melihat penggunaan disk space secara human-readable? (Contoh: df -...)"
+                echo -n "Jawaban Anda: "
+                read -r jawaban_user
+                # normalisasi input
+                jawaban_clean=$(echo "$jawaban_user" | tr '[:upper:]' '[:lower:]' | xargs)
+                if [ "$jawaban_clean" = "df -h" ] || [ "$jawaban_clean" = "df -lh" ]; then
+                    passed=true
+                fi
+                ;;
+            1)
+                echo -e "Apa perintah Linux untuk mengubah hak akses file menjadi executable? (Sebutkan perintah dasarnya saja)"
+                echo -n "Jawaban Anda: "
+                read -r jawaban_user
+                jawaban_clean=$(echo "$jawaban_user" | tr '[:upper:]' '[:lower:]' | xargs)
+                if [ "$jawaban_clean" = "chmod" ] || [ "$jawaban_clean" = "chmod +x" ] || [ "$jawaban_clean" = "chmod 755" ]; then
+                    passed=true
+                fi
+                ;;
+            2)
+                echo -e "Path lengkap ke berkas konfigurasi DNS resolver di Android/Linux adalah? (Contoh: /etc/...)"
+                echo -n "Jawaban Anda: "
+                read -r jawaban_user
+                jawaban_clean=$(echo "$jawaban_user" | tr '[:upper:]' '[:lower:]' | xargs)
+                if [ "$jawaban_clean" = "/etc/resolv.conf" ] || [ "$jawaban_clean" = "resolv.conf" ]; then
+                    passed=true
+                fi
+                ;;
+            3)
+                echo -e "Perintah Linux untuk melihat daftar proses yang sedang berjalan secara real-time adalah?"
+                echo -n "Jawaban Anda: "
+                read -r jawaban_user
+                jawaban_clean=$(echo "$jawaban_user" | tr '[:upper:]' '[:lower:]' | xargs)
+                if [ "$jawaban_clean" = "top" ] || [ "$jawaban_clean" = "htop" ]; then
+                    passed=true
+                fi
+                ;;
+            *)
+                echo -e "Perintah Linux untuk mencari berkas/direktori berdasarkan nama adalah?"
+                echo -n "Jawaban Anda: "
+                read -r jawaban_user
+                jawaban_clean=$(echo "$jawaban_user" | tr '[:upper:]' '[:lower:]' | xargs)
+                if [ "$jawaban_clean" = "find" ] || [ "$jawaban_clean" = "locate" ]; then
+                    passed=true
+                fi
+                ;;
+        esac
+    fi
+
+    if [ "$passed" = true ]; then
+        # Tulis epoch timestamp kedaluwarsa baru (15 menit = 900 detik)
+        local expiry=$(( $(date '+%s') + 900 ))
+        echo "$expiry" > "$UNLOCKED_FILE"
+        echo -e "\n${GREEN}✓ JAWABAN BENAR! Akses sosial media dibuka selama 15 menit.${NC}"
+        echo -e "Gunakan waktu Anda dengan bijak! Kembali bekerja setelah selesai."
+    else
+        echo -e "\n${RED}✗ JAWABAN SALAH / GA BENAR! Akses tetap diblokir.${NC}"
+        echo -e "Fokus ngoding di terminal dulu ya bro! Belajar lagi perintah dasarnya."
+    fi
+    echo -n "Tekan ENTER untuk kembali ke menu..."
+    read -r
+}
+
+# Loop menu utama
+while true; do
+    tampilkan_status
+    echo -e "Menu Pilihan:"
+    echo -e "  [1] Cek Status Terkini"
+    echo -e "  [2] Mulai Tantangan Kuis (Unlock 15 Menit)"
+    echo -e "  [3] Keluar"
+    echo -e "${CYAN}-------------------------------------------${NC}"
+    echo -n "Masukkan pilihan Anda [1-3]: "
+    read -r pil
+    
+    case $pil in
+        1)
+            tampilkan_status
+            echo -n "Tekan ENTER untuk me-refresh..."
+            read -r
+            ;;
+        2)
+            # Karena script butuh menulis ke /data/local/tmp/socmed_unlocked,
+            # pastikan memiliki hak akses atau ingatkan untuk dijalankan sebagai root (su)
+            if [ "$(id -u)" -ne 0 ]; then
+                echo -e "${RED}⚠️ Peringatan: Jalankan perintah ini dengan 'su' (root) agar bisa mengubah status kunci!${NC}"
+                echo -n "Tekan ENTER untuk lanjut sebagai user biasa (mungkin gagal)..."
+                read -r
+            fi
+            jalankan_tantangan
+            ;;
+        3)
+            echo -e "\nSampai jumpa, Billy! Tetap fokus koding!"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Pilihan tidak valid!${NC}"
+            sleep 1
+            ;;
+    esac
+done
